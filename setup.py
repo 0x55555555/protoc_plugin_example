@@ -8,6 +8,7 @@ setuptools.setup(
     install_requires=[
         'protobuf >= 3.3.0',
         'grpcio-tools',
+        'jinja2',
     ],
     license='BSD',
     entry_points = {

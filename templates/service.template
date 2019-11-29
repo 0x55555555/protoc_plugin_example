@@ -1,0 +1,10 @@
+{{name}}
+{{ title(name, "=") }}
+
+{% for method in methods %}
+
+.. _{{ method_ref_name(name, method.name) }}:
+{{method.name}}
+{{ title(method.name, "-") }}
+
+{%- endfor %}

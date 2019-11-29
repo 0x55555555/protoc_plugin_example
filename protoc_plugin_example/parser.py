@@ -12,12 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 import textwrap
 
-from .code import MessageStructure
 from google.protobuf.compiler.plugin_pb2 import CodeGeneratorRequest
 from google.protobuf.descriptor_pb2 import FileDescriptorProto, FieldDescriptorProto
 
+from .service_generator import generate_service
 
 class CodeGeneratorParser(object):
     """Class to read the code generator request and parse comments.
@@ -47,21 +48,23 @@ class CodeGeneratorParser(object):
         """
         return cls(CodeGeneratorRequest.FromString(input_file.read()))
 
-    def describe_structure(self):
+    def generate_docs(self):
 
-        structures = { "enums": {}, "messages": {}, "services": {}}
+        generated_items = {}
+
         # Iterate over each proto file.
         for proto_file in self._request.proto_file:
+            logging.info("Processing file %s", proto_file.name)
             # Ignore any intermediate proto files.
             if proto_file.name not in self._request.file_to_generate:
                 continue
 
-            for descriptor in proto_file.message_type:
-                self.add_structure(structures, descriptor)
+            for service in proto_file.service:
+                logging.info("Writing service %s", service.name)
+                
+                generate_service(generated_items, proto_file, service, proto_file.source_code_info)
 
-            for descriptor in proto_file.enum_type:
-                self.add_enum(structures, descriptor)
-        return structures
+        return generated_items
 
     def add_structure(self,
             structures,

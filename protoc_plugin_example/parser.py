@@ -18,6 +18,7 @@ import textwrap
 from google.protobuf.compiler.plugin_pb2 import CodeGeneratorRequest
 from google.protobuf.descriptor_pb2 import FileDescriptorProto, FieldDescriptorProto
 
+from .proto_utils import parse_path, CommentStructure
 from .service_generator import generate_service
 
 class CodeGeneratorParser(object):
@@ -59,10 +60,30 @@ class CodeGeneratorParser(object):
             if proto_file.name not in self._request.file_to_generate:
                 continue
 
+            CommentStructure.reset()
+            for code_info in proto_file.source_code_info.location:
+                if (len(code_info.leading_comments) or 
+                    len(code_info.trailing_comments) or 
+                    len(code_info.leading_detached_comments)):
+                    parse_path(
+                        proto_file,
+                        code_info.path,
+                        [
+                            code_info.leading_comments,
+                            code_info.trailing_comments,
+                        ] + list(code_info.leading_detached_comments)
+                    )
+
             for service in proto_file.service:
                 logging.info("Writing service %s", service.name)
-                
-                generate_service(generated_items, proto_file, service, proto_file.source_code_info)
+
+                comment_strcucture = CommentStructure.get(
+                    name='{pkg}.{name}'.format(
+                        name=service.name,
+                        pkg=proto_file.package,
+                    ))
+
+                generate_service(generated_items, service, comment_strcucture)
 
         return generated_items
 

@@ -7,4 +7,12 @@
 {{method.name}}
 {{ title(method.name, "-") }}
 
+{% for docs in method.docs %}
+
+###
+{{ docs }}
+###
+
+{%- endfor %}
+
 {%- endfor %}
